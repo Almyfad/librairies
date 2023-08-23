@@ -1,4 +1,4 @@
-import 'package:form_validator/form_validator.dart';
+import 'package:librairies/form_validator.dart';
 import 'package:test/test.dart';
 
 import 'test_utils.dart';
@@ -137,8 +137,6 @@ void main() {
 
   test('validate IPv6 address', () {
     final validate = ValidationBuilder().ipv6().build();
-
-    // TODO: needs more tests
     checkValidation(validate, validValues: [
       'fe80:3::1ff:fe23:4567:890a'
     ], invalidValues: [

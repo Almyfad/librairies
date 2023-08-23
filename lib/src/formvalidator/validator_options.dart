@@ -7,11 +7,11 @@ class ValidatorOptions {
     RegExp? ipv4RegExp,
     RegExp? ipv6RegExp,
     RegExp? urlRegExp,
-  })  : this.emailRegExp = emailRegExp ?? _defaultEmailRegExp,
-        this.phoneRegExp = phoneRegExp ?? _defaultPhoneRegExp,
-        this.ipv4RegExp = ipv4RegExp ?? _defaultIpv4RegExp,
-        this.ipv6RegExp = ipv6RegExp ?? _defaultIpv6RegExp,
-        this.urlRegExp = urlRegExp ?? _defaultUrlRegExp;
+  })  : emailRegExp = emailRegExp ?? _defaultEmailRegExp,
+        phoneRegExp = phoneRegExp ?? _defaultPhoneRegExp,
+        ipv4RegExp = ipv4RegExp ?? _defaultIpv4RegExp,
+        ipv6RegExp = ipv6RegExp ?? _defaultIpv6RegExp,
+        urlRegExp = urlRegExp ?? _defaultUrlRegExp;
 
   RegExp emailRegExp;
   RegExp phoneRegExp;

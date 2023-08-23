@@ -1,5 +1,5 @@
-import 'package:form_validator/form_validator.dart';
-import 'package:form_validator/src/validator_options.dart';
+import 'package:librairies/form_validator.dart';
+import 'package:librairies/src/formvalidator/validator_options.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -15,7 +15,7 @@ void main() {
       ValidationBuilder.globalOptions = cursedOptions;
     });
 
-    final builder = () => ValidationBuilder();
+    builder() => ValidationBuilder();
 
     test('email', () {
       expect(builder().email().test('user@example.org'), isNotNull);
@@ -40,7 +40,7 @@ void main() {
       ValidationBuilder.globalOptions = ValidatorOptions();
     });
 
-    final builder = () => ValidationBuilder(options: cursedOptions);
+    builder() => ValidationBuilder(options: cursedOptions);
 
     test('email', () {
       expect(builder().email().test('user@example.org'), isNotNull);

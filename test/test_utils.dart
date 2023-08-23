@@ -1,4 +1,4 @@
-import 'package:form_validator/form_validator.dart';
+import 'package:librairies/form_validator.dart';
 import 'package:test/test.dart';
 
 void checkValidation(
@@ -7,14 +7,14 @@ void checkValidation(
   List<String?> invalidValues = const [],
 }) {
   if (validValues.isNotEmpty) {
-    validValues.forEach((value) {
+    for (var value in validValues) {
       expect(validate(value), isNull, reason: '"$value" is valid value');
-    });
+    }
   }
 
   if (invalidValues.isNotEmpty) {
-    invalidValues.forEach((value) {
+    for (var value in invalidValues) {
       expect(validate(value), isNotNull, reason: '"$value" is invalid value');
-    });
+    }
   }
 }

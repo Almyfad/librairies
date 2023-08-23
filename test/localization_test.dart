@@ -1,5 +1,5 @@
-import 'package:form_validator/form_validator.dart';
-import 'package:form_validator/src/i18n/all.dart';
+import 'package:librairies/form_validator.dart';
+import 'package:librairies/src/formvalidator/i18n/all.dart';
 import 'package:test/test.dart';
 
 final availableLocales = Map<String, FormValidatorLocale>.fromEntries(
@@ -34,10 +34,10 @@ void main() {
   });
 
   test('global locale', () {
-    availableLocales.values.forEach((value) {
+    for (var value in availableLocales.values) {
       ValidationBuilder.globalLocale = value;
       validateLocale(ValidationBuilder(), value);
-    });
+    }
   });
 
   test('local locale by name', () {
@@ -47,9 +47,9 @@ void main() {
   });
 
   test('local locale', () {
-    availableLocales.values.forEach((value) {
+    for (var value in availableLocales.values) {
       validateLocale(ValidationBuilder(locale: value), value);
-    });
+    }
   });
 
   test('invalid locale', () {
