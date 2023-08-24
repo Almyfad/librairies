@@ -154,4 +154,14 @@ class ValidationBuilder {
   /// Value must be a well formatted URL address
   ValidationBuilder url([String? message]) => add((v) =>
       _options.urlRegExp.hasMatch(v!) ? null : message ?? _locale.url(v));
+
+  /// Value must be a number
+  ValidationBuilder number([String? message]) => add((v) =>
+      _options.numRegExp.hasMatch(v!) ? null : message ?? _locale.number(v));
+
+  /// Value must be a addresseMac
+  ValidationBuilder addresseMac([String? message]) =>
+      add((v) => _options.addressMACRegExp.hasMatch(v!)
+          ? null
+          : message ?? _locale.addresseMac(v));
 }

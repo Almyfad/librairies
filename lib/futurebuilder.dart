@@ -35,11 +35,7 @@ class EnhancedFutureBuilder<T> extends StatelessWidget {
               );
             case ConnectionState.waiting:
             case ConnectionState.active:
-              return Center(
-                  child: Padding(
-                padding: EdgeInsets.all(8.0),
-                child: progressIndicator ?? CircularProgressIndicator(),
-              ));
+              return progressIndicator ?? CircularProgressIndicator();
             case ConnectionState.done:
               if (snapshot.hasError) {
                 return errorBuilder?.call(context, snapshot) ??

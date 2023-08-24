@@ -31,4 +31,10 @@ class LocaleFr implements FormValidatorLocale {
 
   @override
   String url(String v) => "Le champ n'est pas une URL valide";
+
+    @override
+  String addresseMac(String v) => "L'addresse MAC est invalid";
+  
+  @override
+  String number(String v) => "Le champ n'est pas un nombre";
 }
