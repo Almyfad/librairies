@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:librairies/somethingwentwrong.dart';
 
-class CustomStreamBuilder<T> extends StatelessWidget {
+class EnhancedStreamBuilder<T> extends StatelessWidget {
   final Stream<T> stream;
   final Widget? progressIndicator;
   final Widget? noelement;
@@ -9,7 +9,7 @@ class CustomStreamBuilder<T> extends StatelessWidget {
   final Widget Function(BuildContext context, AsyncSnapshot<T> snapshot)
       builder;
 
-  const CustomStreamBuilder(
+  const EnhancedStreamBuilder(
       {Key? key,
       required this.stream,
       this.progressIndicator,
