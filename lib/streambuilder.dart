@@ -40,11 +40,8 @@ class EnhancedStreamBuilder<T> extends StatelessWidget {
               if (snapshot.hasError) {
                 return error ??
                     Center(
-                      child: SizedBox(
-                        height: 70,
-                        child: SomethingWenWrong(
-                          line1: snapshot.error.toString(),
-                        ),
+                      child: SomethingWenWrong(
+                        line1: snapshot.error.toString(),
                       ),
                     );
               }
