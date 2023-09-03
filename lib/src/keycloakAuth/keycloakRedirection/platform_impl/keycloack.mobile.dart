@@ -70,10 +70,11 @@ class _KeycloackWebViewState extends State<_KeycloackWebView> {
           log(null);
           return NavigationDecision.navigate;
         }
-        if (OAuthManager.of(context) == null) 
-        log("OAuthManager is null");
-        else
-        log("setting client http...");
+        if (OAuthManager.of(context) == null) {
+          log("OAuthManager is null");
+        } else {
+          log("setting client http...");
+        }
         OAuthManager.of(context)?.onHttpInit(await widget.grant
             .handleAuthorizationResponse(responseUrl.queryParameters));
 
