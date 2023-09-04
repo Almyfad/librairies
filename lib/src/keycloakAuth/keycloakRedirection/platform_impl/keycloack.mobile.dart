@@ -1,36 +1,32 @@
 import 'package:flutter/material.dart';
+import 'package:librairies/keycloack_auth.dart';
 import 'package:oauth2/oauth2.dart';
-import 'package:librairies/src/keycloakAuth/keycloak_auth.dart';
 import 'package:librairies/src/keycloakAuth/keycloakRedirection/platform_impl/keycloack.base.dart';
 import 'package:librairies/somethingwentwrong.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 class KeycloackImpl extends BaseLogin {
   final Widget? indicator;
-  KeycloackImpl(AuthorizationCodeGrant grant, Uri keycloakUri, {this.indicator})
-      : super(grant, keycloakUri);
+  KeycloackImpl(KeycloakConfig keycloakConfig, {this.indicator})
+      : super(keycloakConfig);
 
   @override
-  Widget login() => KeycloackMobile(grant, keycloakUri).loginMobile();
+  Widget login(BuildContext context) =>
+      KeycloackMobile(keycloakConfig).loginMobile();
 }
 
 class KeycloackMobile {
-  final AuthorizationCodeGrant grant;
-  final Uri keycloackUri;
-
-  KeycloackMobile(this.grant, this.keycloackUri);
+  final KeycloakConfig keycloakConfig;
+  KeycloackMobile(this.keycloakConfig);
 
   Widget loginMobile() => _KeycloackWebView(
-        grant: grant,
-        keycloakUri: keycloackUri,
+        keycloakConfig: keycloakConfig,
       );
 }
 
 class _KeycloackWebView extends StatefulWidget {
-  final AuthorizationCodeGrant grant;
-  final Uri keycloakUri;
-  const _KeycloackWebView(
-      {Key? key, required this.grant, required this.keycloakUri})
+  final KeycloakConfig keycloakConfig;
+  const _KeycloackWebView({Key? key, required this.keycloakConfig})
       : super(key: key);
 
   @override
@@ -40,6 +36,10 @@ class _KeycloackWebView extends StatefulWidget {
 class _KeycloackWebViewState extends State<_KeycloackWebView> {
   late final WebViewController controller;
   late NavigationDelegate _navigationDelegate;
+  late AuthorizationCodeGrant oauthgrant = AuthorizationCodeGrant(
+      widget.keycloakConfig.clientid,
+      widget.keycloakConfig.authorizationEndpoint,
+      widget.keycloakConfig.tokenEndpoint);
   String? logmessage = "";
   WebResourceError? networkError;
   bool isNetworkError = false;
@@ -75,7 +75,7 @@ class _KeycloackWebViewState extends State<_KeycloackWebView> {
         } else {
           log("setting client http...");
         }
-        OAuthManager.of(context)?.onHttpInit(await widget.grant
+        OAuthManager.of(context)?.onHttpInit(await oauthgrant
             .handleAuthorizationResponse(responseUrl.queryParameters));
 
         log("authentification done");
@@ -88,14 +88,13 @@ class _KeycloackWebViewState extends State<_KeycloackWebView> {
     controller = WebViewController()
       ..setBackgroundColor(const Color(0x00000000))
       ..setNavigationDelegate(_navigationDelegate)
-      ..loadRequest(widget.grant.getAuthorizationUrl(widget.keycloakUri));
-    //redirect to authorizationEndpoint simplifie la conf keycloack. De plus on intercept le redirect, on le kill et on recup le authCode
+      ..loadRequest(oauthgrant.getAuthorizationUrl(Uri.parse(widget.keycloakConfig.redirectUri)));
+    // on intercept le redirect, on le kill et on recup le authCode ( on ne navigue pas vers le redirect URi)
   }
 
   void log(String? msg) => setState(() {
         logmessage = msg;
       });
-
 
   @override
   Widget build(BuildContext context) {

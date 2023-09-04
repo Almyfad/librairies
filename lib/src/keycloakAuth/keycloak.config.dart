@@ -5,9 +5,11 @@ import 'package:equatable/equatable.dart';
 class KeycloakConfig extends Equatable {
   final String issuer;
   final String clientid;
+  final String redirectUri;
   const KeycloakConfig({
     required this.issuer,
     required this.clientid,
+    required this.redirectUri,
   });
   Uri get authorizationEndpoint =>
       Uri.parse("$issuer/protocol/openid-connect/auth");
@@ -15,18 +17,20 @@ class KeycloakConfig extends Equatable {
   Uri get logoutEndpoint => Uri.parse("$issuer/protocol/openid-connect/logout");
 
   @override
-  String toString() => 'KeycloakConfig(issuer: $issuer, clientid: $clientid)';
+  String toString() => 'KeycloakConfig(issuer: $issuer, clientid: $clientid, redirectUri: $redirectUri)';
 
   @override
-  List<Object> get props => [issuer, clientid];
+  List<Object> get props => [issuer, clientid, redirectUri];
 
   KeycloakConfig copyWith({
     String? issuer,
     String? clientid,
+    String? redirectUri,
   }) {
     return KeycloakConfig(
       issuer: issuer ?? this.issuer,
       clientid: clientid ?? this.clientid,
+      redirectUri: redirectUri ?? this.redirectUri,
     );
   }
 
@@ -34,6 +38,7 @@ class KeycloakConfig extends Equatable {
     return {
       'issuer': issuer,
       'clientid': clientid,
+      'redirectUri': redirectUri,
     };
   }
 
@@ -41,6 +46,7 @@ class KeycloakConfig extends Equatable {
     return KeycloakConfig(
       issuer: map['issuer'] ?? '',
       clientid: map['clientid'] ?? '',
+      redirectUri: map['redirectUri'],
     );
   }
 

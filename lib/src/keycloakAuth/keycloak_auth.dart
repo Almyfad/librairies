@@ -42,7 +42,7 @@ class _KeycloakAuthState extends State<KeycloakAuth> {
             }),
         child: _AuthHandler(
           indicator: widget.indicator,
-          keycloackConfig: widget.keycloakConfig,
+          keycloakConfig: widget.keycloakConfig,
           errorWidget: widget.errorWidget,
           child: widget.child,
         ));
@@ -74,14 +74,14 @@ class OAuthManager extends InheritedWidget {
   bool updateShouldNotify(OAuthManager oldWidget) =>
       oldWidget.onHttpInit != onHttpInit;
 
-  Future<dynamic> get(BuildContext context, String url,
+  Future<http.Response> get(BuildContext context, String url,
       {Map<String, String>? params}) {
     var parsedUrl = Uri.parse(url).replace(queryParameters: params);
     debugPrint("[🌎Url]=$parsedUrl");
     return _sendQuery(context, () => client!.get(parsedUrl));
   }
 
-  Future<dynamic> post(BuildContext context, String url,
+  Future<http.Response> post(BuildContext context, String url,
       {Object? body, Map<String, String>? params}) {
     var parsedUrl = Uri.parse(url).replace(queryParameters: params);
     debugPrint("[🌎Url]=$parsedUrl");
@@ -93,7 +93,7 @@ class OAuthManager extends InheritedWidget {
             headers: {"Content-Type": "application/json"}));
   }
 
-  Future<dynamic> postform(BuildContext context, String url,
+  Future<http.Response> postform(BuildContext context, String url,
       {Object? body, Map<String, String>? params}) {
     var parsedUrl = Uri.parse(url).replace(queryParameters: params);
     debugPrint("[🌎Url]=$parsedUrl");
@@ -105,7 +105,7 @@ class OAuthManager extends InheritedWidget {
             headers: {"Content-Type": "application/x-www-form-urlencoded"}));
   }
 
-  Future<dynamic> _sendQuery(
+  Future<http.Response> _sendQuery(
       BuildContext context, Future<http.Response> Function() method) async {
     assert(client != null, "authenticateHttp.client cannot be null");
 
@@ -119,20 +119,16 @@ class OAuthManager extends InheritedWidget {
     }
     try {
       var response = await method().timeout(const Duration(seconds: 30));
+      if (response.statusCode.toString().startsWith("50")) {
+        return Future.error(Internal(message: response.body));
+      }
       if (response.statusCode == 403) {
         return Future.error(UnAuthorise(message: response.body));
       }
       if (response.statusCode == 404) {
         return Future.error(NotFound());
       }
-      if (response.statusCode == 204) {
-        return Future.value(true);
-      }
-      try {
-        return jsonDecode(response.body);
-      } catch (_) {
-        return response.body;
-      }
+      return response;
     } on AuthorizationException catch (e) {
       client!.close();
       Future.microtask(() => OAuthManager.of(context)
@@ -148,15 +144,18 @@ class OAuthManager extends InheritedWidget {
 
   Future<bool?> logout(BuildContext context) async {
     if (client == null) return Future.value(null);
+    try {
+      var url = keycloakConfig.logoutEndpoint.toString();
+      var response = await postform(context, url, body: {
+        "client_id": keycloakConfig.clientid,
+        "refresh_token": client!.credentials.refreshToken
+      });
 
-    var url = keycloakConfig.logoutEndpoint.toString();
-    var response = await postform(context, url, body: {
-      "client_id": keycloakConfig.clientid,
-      "refresh_token": client!.credentials.refreshToken
-    });
-
-    debugPrint(json.encode(response));
-    return response;
+      debugPrint(json.encode(response));
+      return true;
+    } catch (e) {
+      return Future.error(e);
+    }
   }
 
   Client? get client => authenticateHttp.client;
@@ -192,12 +191,12 @@ class _AuthHandler extends StatefulWidget {
   final Widget child;
   final Widget? indicator;
   final Widget errorWidget;
-  final KeycloakConfig keycloackConfig;
+  final KeycloakConfig keycloakConfig;
   const _AuthHandler({
     Key? key,
     required this.child,
     required this.errorWidget,
-    required this.keycloackConfig,
+    required this.keycloakConfig,
     this.indicator,
   }) : super(key: key);
 
@@ -206,20 +205,14 @@ class _AuthHandler extends StatefulWidget {
 }
 
 class _AuthHandlerState extends State<_AuthHandler> {
-  late Uri uri = Uri.parse(widget.keycloackConfig.issuer);
+  late Uri uri = Uri.parse(widget.keycloakConfig.redirectUri);
 
   @override
   Widget build(BuildContext context) {
     if (OAuthManager.of(context)?.isLogged ?? false) return widget.child;
 
     return KeycloackRedirection(
-        indicator: widget.indicator,
-        keycloackUri: uri,
-        grant: AuthorizationCodeGrant(
-          widget.keycloackConfig.clientid,
-          widget.keycloackConfig.authorizationEndpoint,
-          widget.keycloackConfig.tokenEndpoint,
-        ));
+        indicator: widget.indicator, keycloakConfig: widget.keycloakConfig);
   }
 }
 
