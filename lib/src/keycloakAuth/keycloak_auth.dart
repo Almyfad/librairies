@@ -1,3 +1,4 @@
+// ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:async';
 import 'dart:convert';
 
@@ -12,12 +13,14 @@ import 'keycloakRedirection/platform_impl/keycloack.redirection.dart';
 class KeycloakAuth extends StatefulWidget {
   final KeycloakConfig keycloakConfig;
   final Widget? indicator;
+  final Function(String? accessToken)? onTokenUpdated;
   const KeycloakAuth({
     Key? key,
     required this.keycloakConfig,
+    this.indicator,
+    this.onTokenUpdated,
     required this.child,
     required this.errorWidget,
-    this.indicator,
     this.authenticateHttpClient,
   }) : super(key: key);
   final Widget child;
@@ -35,6 +38,7 @@ class _KeycloakAuthState extends State<KeycloakAuth> {
   Widget build(BuildContext context) {
     return OAuthManager(
         indicator: widget.indicator,
+        onTokenUpdated: widget.onTokenUpdated,
         keycloakConfig: widget.keycloakConfig,
         authenticateHttp: authenticateHttp,
         onHttpInit: (value) => setState(() {
@@ -42,6 +46,7 @@ class _KeycloakAuthState extends State<KeycloakAuth> {
             }),
         child: _AuthHandler(
           indicator: widget.indicator,
+          onTokenUpdated: widget.onTokenUpdated,
           keycloakConfig: widget.keycloakConfig,
           errorWidget: widget.errorWidget,
           child: widget.child,
@@ -51,6 +56,8 @@ class _KeycloakAuthState extends State<KeycloakAuth> {
 
 class OAuthManager extends InheritedWidget {
   final KeycloakConfig keycloakConfig;
+  final Function(String? accessToken)? onTokenUpdated;
+
   final Widget? indicator;
   const OAuthManager({
     super.key,
@@ -59,6 +66,7 @@ class OAuthManager extends InheritedWidget {
     required this.indicator,
     required this.keycloakConfig,
     required this.onHttpInit,
+    this.onTokenUpdated,
   });
 
   final AuthenticateHttpClient authenticateHttp;
@@ -168,6 +176,7 @@ class OAuthManager extends InheritedWidget {
         context,
         MaterialPageRoute(
             builder: (context) => KeycloakAuth(
+                onTokenUpdated: onTokenUpdated,
                 indicator: indicator,
                 keycloakConfig: keycloakConfig,
                 authenticateHttpClient: authenticateHttp,
@@ -180,6 +189,7 @@ class OAuthManager extends InheritedWidget {
         context,
         MaterialPageRoute(
             builder: (context) => KeycloakAuth(
+                onTokenUpdated: onTokenUpdated,
                 keycloakConfig: keycloakConfig,
                 authenticateHttpClient: authenticateHttp,
                 errorWidget: Container(),
@@ -192,11 +202,14 @@ class _AuthHandler extends StatefulWidget {
   final Widget? indicator;
   final Widget errorWidget;
   final KeycloakConfig keycloakConfig;
+  final Function(String? accessToken)? onTokenUpdated;
+
   const _AuthHandler({
     Key? key,
     required this.child,
     required this.errorWidget,
     required this.keycloakConfig,
+    this.onTokenUpdated,
     this.indicator,
   }) : super(key: key);
 

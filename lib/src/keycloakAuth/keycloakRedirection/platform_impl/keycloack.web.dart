@@ -116,6 +116,7 @@ class __KeycloackWebViewState extends State<_KeycloackWebView> {
         window.localStorage.remove('expiration');
       } else {
         Future.microtask(() {
+          OAuthManager.of(context)?.onTokenUpdated?.call(localAccesToken);
           OAuthManager.of(context)?.onHttpInit(Client(
               Credentials(localAccesToken.toString(),
                   refreshToken: localRefreshToken, expiration: localExpiration),
