@@ -75,8 +75,11 @@ class _KeycloackWebViewState extends State<_KeycloackWebView> {
         } else {
           log("setting client http...");
         }
-        OAuthManager.of(context)?.onHttpInit(await oauthgrant
-            .handleAuthorizationResponse(responseUrl.queryParameters));
+
+        var client = await oauthgrant
+            .handleAuthorizationResponse(responseUrl.queryParameters);
+        OAuthManager.of(context)?.onHttpInit(client);
+        OAuthManager.of(context)?.onTokenUpdated?.call(client.credentials.accessToken);
 
         log("authentification done");
 
@@ -88,7 +91,8 @@ class _KeycloackWebViewState extends State<_KeycloackWebView> {
     controller = WebViewController()
       ..setBackgroundColor(const Color(0x00000000))
       ..setNavigationDelegate(_navigationDelegate)
-      ..loadRequest(oauthgrant.getAuthorizationUrl(Uri.parse(widget.keycloakConfig.redirectUri)));
+      ..loadRequest(oauthgrant
+          .getAuthorizationUrl(Uri.parse(widget.keycloakConfig.redirectUri)));
     // on intercept le redirect, on le kill et on recup le authCode ( on ne navigue pas vers le redirect URi)
   }
 
