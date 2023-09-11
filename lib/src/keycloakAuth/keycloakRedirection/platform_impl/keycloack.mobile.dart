@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:librairies/keycloack_auth.dart';
+import 'package:librairies/src/keycloakAuth/keycloakRedirection/keycloak.provider.dart';
 import 'package:oauth2/oauth2.dart';
 import 'package:librairies/src/keycloakAuth/keycloakRedirection/platform_impl/keycloack.base.dart';
 import 'package:librairies/somethingwentwrong.dart';
@@ -24,16 +26,17 @@ class KeycloackMobile {
       );
 }
 
-class _KeycloackWebView extends StatefulWidget {
+class _KeycloackWebView extends ConsumerStatefulWidget {
   final KeycloakConfig keycloakConfig;
   const _KeycloackWebView({Key? key, required this.keycloakConfig})
       : super(key: key);
 
   @override
-  State<_KeycloackWebView> createState() => _KeycloackWebViewState();
+  ConsumerState<ConsumerStatefulWidget> createState() =>
+      _KeycloackWebViewState();
 }
 
-class _KeycloackWebViewState extends State<_KeycloackWebView> {
+class _KeycloackWebViewState extends ConsumerState<_KeycloackWebView> {
   late final WebViewController controller;
   late NavigationDelegate _navigationDelegate;
   late AuthorizationCodeGrant oauthgrant = AuthorizationCodeGrant(
@@ -70,16 +73,10 @@ class _KeycloackWebViewState extends State<_KeycloackWebView> {
           log(null);
           return NavigationDecision.navigate;
         }
-        if (OAuthManager.of(context) == null) {
-          log("OAuthManager is null");
-        } else {
-          log("setting client http...");
-        }
-
+        log("setting client http...");
         var client = await oauthgrant
             .handleAuthorizationResponse(responseUrl.queryParameters);
-        OAuthManager.of(context)?.onHttpInit(client);
-        OAuthManager.of(context)?.onTokenUpdated?.call(client.credentials.accessToken);
+        ref.read(oAuthClientProvider.notifier).client = client;
 
         log("authentification done");
 
