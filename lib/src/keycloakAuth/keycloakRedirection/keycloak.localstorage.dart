@@ -28,7 +28,7 @@ enum Keys {
 
 class KeyclockLocalStorage {
   static bool get isAcessTokenReady =>
-      Keys.accesstoken.exist && Keys.accesstoken.value != null;
+      Keys.accesstoken.exist && Keys.accesstoken.value != null && (Keys.accesstoken.value?.isNotEmpty ?? false);
   static String get currentCodeVerifier =>
       Keys.codePKCEVerifier.value ?? newcodeVerifier;
 

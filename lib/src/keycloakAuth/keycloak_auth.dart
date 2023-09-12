@@ -33,6 +33,7 @@ class _KeycloakAuthState extends ConsumerState<KeycloakAuth> {
     Future.microtask(() => ref.watch(oAuthClientProvider.notifier).addListener((state) {
           widget.onTokenUpdated(state?.client);
         }));
+        
   }
 
   @override

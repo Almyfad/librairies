@@ -133,6 +133,7 @@ class __KeycloackWebViewState extends ConsumerState<KeycloackWebView> {
 
         Keys.codePKCEVerifier.reset;
       }).onError((error, stackTrace) {
+        debugPrint(error.toString());
         isTokenRedreshenable = false;
       });
     }
