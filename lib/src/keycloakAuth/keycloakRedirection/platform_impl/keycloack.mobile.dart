@@ -56,12 +56,13 @@ class _KeycloackWebViewState extends ConsumerState<_KeycloackWebView> {
       onPageStarted: (url) {
         networkError = null;
       },
-      onPageFinished: (url) async {
-        await Future.delayed(const Duration(milliseconds: 500));
-        setState(() {
-          isNetworkError = networkError != null;
-          reloading = false;
-        });
+      onPageFinished: (url) {
+        if (mounted) {
+          setState(() {
+            isNetworkError = networkError != null;
+            reloading = false;
+          });
+        }
       },
       onNavigationRequest: (NavigationRequest request) async {
         log("verify code...");
@@ -99,6 +100,7 @@ class _KeycloackWebViewState extends ConsumerState<_KeycloackWebView> {
 
   @override
   Widget build(BuildContext context) {
+    ref.watch(timerProvider(widget.keycloakConfig));
     return Scaffold(body: Builder(builder: (context) {
       if (isNetworkError) {
         return Center(
