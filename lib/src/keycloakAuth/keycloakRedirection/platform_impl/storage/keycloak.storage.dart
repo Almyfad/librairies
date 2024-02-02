@@ -53,7 +53,7 @@ enum Keys {
       ? null
       : DateTime.fromMillisecondsSinceEpoch(int.parse(value));
 
-  set value(String? value) => KeyclockLocalStorage.instance[this] = value ?? "";
+  set value(String? value) => KeyclockLocalStorage.instance[key] = value ?? "";
   set setDate(DateTime? value) =>
-      KeyclockLocalStorage.instance[this] = value?.millisecondsSinceEpoch.toString() ?? "NaN";
+      KeyclockLocalStorage.instance[key] = value?.millisecondsSinceEpoch.toString() ?? "NaN";
 }

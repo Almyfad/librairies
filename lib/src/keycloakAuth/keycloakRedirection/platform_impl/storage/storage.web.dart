@@ -4,22 +4,22 @@ import 'dart:html';
 import 'package:librairies/src/keycloakAuth/keycloakRedirection/platform_impl/storage/keycloak.storage.dart';
 import 'package:librairies/src/keycloakAuth/keycloakRedirection/platform_impl/storage/storage.base.dart';
 
-class StorageImpl extends BaseStorage implements MapBase<Keys, String> {
+class StorageImpl extends BaseStorage implements MapBase<String, String> {
   @override
   String? operator [](Object? key) {
     return window.localStorage[key];
   }
 
   @override
-  void operator []=(Keys key, String value) {
-    window.localStorage[key.key] = value;
+  void operator []=(String key, String value) {
+    window.localStorage[key] = value;
   }
 
   @override
-  void addAll(Map<Keys, String> other) {}
+  void addAll(Map<String, String> other) {}
 
   @override
-  void addEntries(Iterable<MapEntry<Keys, String>> newEntries) {}
+  void addEntries(Iterable<MapEntry<String, String>> newEntries) {}
 
   @override
   Map<RK, RV> cast<RK, RV>() {
@@ -42,10 +42,10 @@ class StorageImpl extends BaseStorage implements MapBase<Keys, String> {
   }
 
   @override
-  Iterable<MapEntry<Keys, String>> get entries => throw UnimplementedError();
+  Iterable<MapEntry<String, String>> get entries => throw UnimplementedError();
 
   @override
-  void forEach(void Function(Keys key, String value) action) {}
+  void forEach(void Function(String key, String value) action) {}
 
   @override
   bool get isEmpty => window.localStorage.isEmpty;
@@ -54,19 +54,19 @@ class StorageImpl extends BaseStorage implements MapBase<Keys, String> {
   bool get isNotEmpty => window.localStorage.isNotEmpty;
 
   @override
-  Iterable<Keys> get keys => throw UnimplementedError();
+  Iterable<String> get keys => throw UnimplementedError();
 
   @override
   int get length => throw UnimplementedError();
 
   @override
   Map<K2, V2> map<K2, V2>(
-      MapEntry<K2, V2> Function(Keys key, String value) transform) {
+      MapEntry<K2, V2> Function(String key, String value) transform) {
     throw UnimplementedError();
   }
 
   @override
-  String putIfAbsent(Keys key, String Function() ifAbsent) {
+  String putIfAbsent(String key, String Function() ifAbsent) {
     throw UnimplementedError();
   }
 
@@ -76,18 +76,18 @@ class StorageImpl extends BaseStorage implements MapBase<Keys, String> {
   }
 
   @override
-  void removeWhere(bool Function(Keys key, String value) test) {
+  void removeWhere(bool Function(String key, String value) test) {
     throw UnimplementedError();
   }
 
   @override
-  String update(Keys key, String Function(String value) update,
+  String update(String key, String Function(String value) update,
       {String Function()? ifAbsent}) {
     throw UnimplementedError();
   }
 
   @override
-  void updateAll(String Function(Keys key, String value) update) {}
+  void updateAll(String Function(String key, String value) update) {}
 
   @override
   Iterable<String> get values => window.localStorage.values;

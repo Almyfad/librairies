@@ -3,8 +3,8 @@ import 'dart:collection';
 import 'package:librairies/src/keycloakAuth/keycloakRedirection/platform_impl/storage/keycloak.storage.dart';
 import 'package:librairies/src/keycloakAuth/keycloakRedirection/platform_impl/storage/storage.base.dart';
 
-class StorageImpl extends BaseStorage implements MapBase<Keys, String> {
-  static Map<Keys, String> storage = {};
+class StorageImpl extends BaseStorage implements MapBase<String, String> {
+  static Map<String, String> storage = {};
 
   @override
   String? operator [](Object? key) {
@@ -12,17 +12,17 @@ class StorageImpl extends BaseStorage implements MapBase<Keys, String> {
   }
 
   @override
-  void operator []=(Keys key, String value) {
+  void operator []=(String key, String value) {
     StorageImpl.storage[key] = value;
   }
 
   @override
-  void addAll(Map<Keys, String> other) {
+  void addAll(Map<String, String> other) {
     StorageImpl.storage.addAll(other);
   }
 
   @override
-  void addEntries(Iterable<MapEntry<Keys, String>> newEntries) {
+  void addEntries(Iterable<MapEntry<String, String>> newEntries) {
     StorageImpl.storage.addEntries(newEntries);
   }
 
@@ -47,10 +47,10 @@ class StorageImpl extends BaseStorage implements MapBase<Keys, String> {
   }
 
   @override
-  Iterable<MapEntry<Keys, String>> get entries => StorageImpl.storage.entries;
+  Iterable<MapEntry<String, String>> get entries => StorageImpl.storage.entries;
 
   @override
-  void forEach(void Function(Keys key, String value) action) {
+  void forEach(void Function(String key, String value) action) {
     StorageImpl.storage.forEach((key, value) {
       action(key, value);
     });
@@ -63,19 +63,19 @@ class StorageImpl extends BaseStorage implements MapBase<Keys, String> {
   bool get isNotEmpty => StorageImpl.storage.isNotEmpty;
 
   @override
-  Iterable<Keys> get keys => StorageImpl.storage.keys;
+  Iterable<String> get keys => StorageImpl.storage.keys;
 
   @override
   int get length => StorageImpl.storage.length;
 
   @override
   Map<K2, V2> map<K2, V2>(
-      MapEntry<K2, V2> Function(Keys key, String value) transform) {
+      MapEntry<K2, V2> Function(String key, String value) transform) {
     return StorageImpl.storage.map((key, value) => transform(key, value));
   }
 
   @override
-  String putIfAbsent(Keys key, String Function() ifAbsent) {
+  String putIfAbsent(String key, String Function() ifAbsent) {
     return StorageImpl.storage.putIfAbsent(key, () => ifAbsent());
   }
 
@@ -85,18 +85,18 @@ class StorageImpl extends BaseStorage implements MapBase<Keys, String> {
   }
 
   @override
-  void removeWhere(bool Function(Keys key, String value) test) {
+  void removeWhere(bool Function(String key, String value) test) {
     StorageImpl.storage.removeWhere((key, value) => test(key, value));
   }
 
   @override
-  String update(Keys key, String Function(String value) update,
+  String update(String key, String Function(String value) update,
       {String Function()? ifAbsent}) {
     return StorageImpl.storage.update(key, (value) => update(value));
   }
 
   @override
-  void updateAll(String Function(Keys key, String value) update) {
+  void updateAll(String Function(String key, String value) update) {
     StorageImpl.storage.updateAll((key, value) => update(key, value));
   }
 

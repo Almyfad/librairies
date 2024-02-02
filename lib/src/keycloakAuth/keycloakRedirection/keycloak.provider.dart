@@ -56,7 +56,7 @@ final refreshTokenProvider = FutureProvider.autoDispose
       'Content-Type': 'application/x-www-form-urlencoded'
     }, body: {
       "client_id": config.clientid,
-      "refresh_token": Keys.refreshtoken.value,
+      "refresh_token": client.credentials.refreshToken,
       "grant_type": "refresh_token"
     });
     var data = jsonDecode(res.body);
