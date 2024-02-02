@@ -25,7 +25,7 @@ class SomethingWenWrong extends StatelessWidget {
           size: iconsize,
         ),
         SelectableText(
-          line1 ?? 'Une Erreure est survenue...',
+          line1 ?? 'Une erreur est survenue...',
           textAlign: TextAlign.center,
           style: const TextStyle(color: Colors.redAccent),
         ),

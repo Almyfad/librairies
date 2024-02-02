@@ -30,7 +30,7 @@ class EnhancedFutureBuilder<T> extends StatelessWidget {
             case ConnectionState.none:
               return const Center(
                 child: SomethingWenWrong(
-                  line1: "network issue",
+                  line1: "Problème réseau",
                 ),
               );
             case ConnectionState.waiting:
@@ -52,7 +52,7 @@ class EnhancedFutureBuilder<T> extends StatelessWidget {
                       child: SizedBox(
                         height: 70,
                         child: SomethingWenWrong(
-                          line1: "No Data",
+                          line1: "Pas de données",
                         ),
                       ),
                     );

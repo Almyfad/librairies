@@ -1,4 +1,3 @@
-// ignore_for_file: public_member_api_docs, sort_constructors_first
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -14,7 +13,7 @@ class KeycloakAuth extends ConsumerStatefulWidget {
   final Widget child;
   final Widget errorWidget;
   final Function(Client? client) onTokenUpdated;
-  const KeycloakAuth({
+  KeycloakAuth({
     required this.keycloakConfig,
     this.indicator,
     required this.child,
@@ -29,11 +28,12 @@ class KeycloakAuth extends ConsumerStatefulWidget {
 class _KeycloakAuthState extends ConsumerState<KeycloakAuth> {
   @override
   void initState() {
+    KeycloackController.config = widget.keycloakConfig;
     super.initState();
-    Future.microtask(() => ref.watch(oAuthClientProvider.notifier).addListener((state) {
-          widget.onTokenUpdated(state?.client);
-        }));
-        
+    Future.microtask(
+        () => ref.watch(oAuthClientProvider.notifier).addListener((state) {
+              widget.onTokenUpdated(state?.client);
+            }));
   }
 
   @override
@@ -45,20 +45,12 @@ class _KeycloakAuthState extends ConsumerState<KeycloakAuth> {
   }
 }
 
-//TODO log out
-/*
-  Future<bool?> logout(BuildContext context) async {
-    if (client == null) return Future.value(null);
-    try {
-      var url = keycloakConfig.logoutEndpoint.toString();
-      var response = await postform(context, url, body: {
-        "client_id": keycloakConfig.clientid,
-        "refresh_token": client!.credentials.refreshToken
-      });
+class KeycloackController {
+  static KeycloakConfig? config;
+  KeycloackController();
 
-      debugPrint(json.encode(response));
-      return true;
-    } catch (e) {
-      return Future.error(e);
-    }
-  }*/
+  Future<bool> logout(WidgetRef ref) async {
+    if (config == null) return false;
+     return ref.read(logoutProvider(config!).future);
+  }
+}

@@ -46,7 +46,7 @@ class KeycloakConfig extends Equatable {
     return KeycloakConfig(
       issuer: map['issuer'] ?? '',
       clientid: map['clientid'] ?? '',
-      redirectUri: map['redirectUri'],
+      redirectUri: map['redirectUri'] ?? '',
     );
   }
 

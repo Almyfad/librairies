@@ -5,9 +5,9 @@ import 'dart:html' show window;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:librairies/keycloack_auth.dart';
-import 'package:librairies/src/keycloakAuth/keycloakRedirection/keycloak.localstorage.dart';
 import 'package:librairies/src/keycloakAuth/keycloakRedirection/keycloak.provider.dart';
 import 'package:librairies/src/keycloakAuth/keycloakRedirection/platform_impl/keycloack.base.dart';
+import 'package:librairies/src/keycloakAuth/keycloakRedirection/platform_impl/storage/keycloak.storage.dart';
 import 'package:oauth2/oauth2.dart';
 
 class KeycloackImpl extends BaseLogin {

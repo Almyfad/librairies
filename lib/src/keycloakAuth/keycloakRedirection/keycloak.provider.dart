@@ -4,7 +4,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:librairies/src/keycloakAuth/keycloak.config.dart';
-import 'package:librairies/src/keycloakAuth/keycloakRedirection/keycloak.localstorage.dart';
+import 'package:librairies/src/keycloakAuth/keycloakRedirection/platform_impl/storage/keycloak.storage.dart';
 import 'package:oauth2/oauth2.dart';
 
 final oAuthClientProvider =
@@ -35,7 +35,8 @@ class WrappedClient {
   bool get isLogged => _isExpired == false || _canRefresh;
 }
 
-final timerProvider = StateProvider.family<Timer,KeycloakConfig>((ref,config) {
+final timerProvider =
+    StateProvider.family<Timer, KeycloakConfig>((ref, config) {
   var time = Duration(minutes: 5);
   debugPrint(
       "📅 Token refresh setup to ${DateTime.now().add(time).toIso8601String()}");
@@ -45,8 +46,8 @@ final timerProvider = StateProvider.family<Timer,KeycloakConfig>((ref,config) {
   });
 });
 
-final refreshTokenProvider =
-    FutureProvider.family<bool, KeycloakConfig>((ref, config) async {
+final refreshTokenProvider = FutureProvider.autoDispose
+    .family<bool, KeycloakConfig>((ref, config) async {
   var client = ref.watch(oAuthClientProvider)?.client;
   debugPrint("💥💥 Token refreshing");
   if (client == null) return Future.value(false);
@@ -55,7 +56,7 @@ final refreshTokenProvider =
       'Content-Type': 'application/x-www-form-urlencoded'
     }, body: {
       "client_id": config.clientid,
-      "refresh_token": Keys.refreshtoken.value,
+      "refresh_token": client.credentials.refreshToken,
       "grant_type": "refresh_token"
     });
     var data = jsonDecode(res.body);
@@ -72,6 +73,36 @@ final refreshTokenProvider =
           Keys.accesstoken.value!,
           refreshToken: Keys.refreshtoken.value,
           expiration: Keys.expiration.getDate);
+    } catch (e) {
+      debugPrint(e.toString());
+    }
+
+    return true;
+  } catch (e) {
+    return Future.error(e);
+  }
+});
+
+final logoutProvider =
+    FutureProvider.family<bool, KeycloakConfig>((ref, config) async {
+  var client = ref.watch(oAuthClientProvider)?.client;
+  debugPrint("💥💥 LOGIN OUT !!!!");
+
+  if (client == null) return Future.value(false);
+  try {
+    await client.post(config.logoutEndpoint, headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    }, body: {
+      "client_id": config.clientid,
+      "refresh_token": client.credentials.refreshToken,
+    });
+
+    Keys.accesstoken.value = null;
+    Keys.refreshtoken.value = null;
+    Keys.expiration.setDate = null;
+
+    try {
+      ref.read(oAuthClientProvider.notifier).client = null;
     } catch (e) {
       debugPrint(e.toString());
     }
