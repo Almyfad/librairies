@@ -58,8 +58,9 @@ class _KeycloakAuthState extends State<KeycloakAuth> {
                 ? widget.child
                 : KeycloackRedirection(
                     onLogged: (value) {
-                      widget.onTokenUpdated(
-                          KeycloakHttpCLient(value!.credentials));
+                      widget.onTokenUpdated(KeycloakHttpCLient(
+                          value!.credentials,
+                          oauthNotifier: notifier));
                       notifier.client = value;
                       timer = notifier.scheduleRefreshToken();
                     },

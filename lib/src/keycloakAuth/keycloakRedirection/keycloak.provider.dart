@@ -73,9 +73,7 @@ class OauthNotifier extends ChangeNotifier {
 
   Future<bool> logout(config) async {
     if (Keys.accesstoken.value == null) return Future.value(false);
-
     debugPrint("💥💥 LOGIN OUT !!!!");
-
     try {
       await Client(Credentials(Keys.accesstoken.value!))
           .post(config.logoutEndpoint, headers: {
@@ -104,12 +102,16 @@ class OauthNotifier extends ChangeNotifier {
 }
 
 class KeycloakHttpCLient extends Client {
-  KeycloakHttpCLient(super.credentials);
-
-
+  final OauthNotifier oauthNotifier;
+  KeycloakHttpCLient(super.credentials, {required this.oauthNotifier});
   @override
   Future<http.StreamedResponse> send(http.BaseRequest request) async {
-    print("=============>yeaaaaaaaaaah");
-    return super.send(request);
+    try {
+      var send = await super.send(request);
+      return send;
+    } on ExpirationException catch (_) {
+      oauthNotifier.reset();
+      rethrow;
+    }
   }
 }
