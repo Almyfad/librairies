@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:librairies/keycloack_auth.dart';
-import 'package:librairies/src/keycloakAuth/keycloakRedirection/platform_impl/keycloack.base.dart';
+import 'package:oauth2/oauth2.dart';
 
-class KeycloackImpl extends BaseLogin {
+class KeycloackImpl extends StatelessWidget {
   final Widget? indicator;
-
-  KeycloackImpl(KeycloakConfig keycloakConfig,{this.indicator})
-      : super(keycloakConfig);
+  final Function(Client? client) onLogged;
+  final KeycloakConfig keycloakConfig;
+  KeycloackImpl({
+    required this.keycloakConfig,
+    required this.onLogged,
+    this.indicator,
+  });
   @override
-  Widget login(BuildContext context) {
+  Widget build(BuildContext context) {
     throw Exception("Stub implementation");
   }
 }

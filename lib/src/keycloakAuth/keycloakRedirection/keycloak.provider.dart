@@ -1,114 +1,95 @@
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:librairies/src/keycloakAuth/keycloak.config.dart';
 import 'package:librairies/src/keycloakAuth/keycloakRedirection/platform_impl/storage/keycloak.storage.dart';
 import 'package:oauth2/oauth2.dart';
 
-final oAuthClientProvider =
-    StateNotifierProvider<OauthNotifier, WrappedClient?>((ref) {
-  return OauthNotifier();
-});
+class OauthNotifier extends ChangeNotifier {
+  Client? _client;
 
-class OauthNotifier extends StateNotifier<WrappedClient?> {
-  OauthNotifier() : super(null);
+  String? get accessToken => _client?.credentials.accessToken;
+  String? get refreshToken => _client?.credentials.refreshToken;
+  DateTime? get expiration => _client?.credentials.expiration;
+
+  bool get _isExpired => _client?.credentials.isExpired ?? true;
+  bool get _canRefresh => _client?.credentials.canRefresh ?? false;
+  bool get isLogged => _isExpired == false || _canRefresh;
 
   set client(Client? value) {
-    state = WrappedClient(client: value);
+    _client = value;
+    notifyListeners();
+  }
+
+  reset() {
+    _client = null;
+    notifyListeners();
+  }
+
+  Future<bool> refresh() async {
+    debugPrint("💥💥 Token refreshor");
+    _client = await _client?.refreshCredentials();
+    if (_client != null) {
+      Keys.expiration.setDate = _client!.credentials.expiration;
+      Keys.accesstoken.value = _client!.credentials.accessToken;
+      Keys.refreshtoken.value = _client!.credentials.refreshToken;
+    }
+    debugPrint(
+        "✔️🗝️ new Token generated expired at ${Keys.expiration.getDate?.toIso8601String()}");
+    notifyListeners();
+    return true;
+  }
+
+  scheduleRefreshToken() async{
+    if (_client == null) return;
+    if (_client!.credentials.expiration == null) return;
+    var time = Duration(
+        seconds: DateTime.now()
+                .difference(_client!.credentials.expiration!)
+                .abs()
+                .inSeconds -
+            30);
+
+    debugPrint(
+        "📅 Token refresh setup to ${DateTime.now().add(time).toIso8601String()}");
+
+    await Future.delayed(time, () => debugPrint("Time elapsed ! Try Refreshing Token"));
+    await refresh();
+    scheduleRefreshToken();
   }
 
   set credidentials(Credentials creds) {
-    state = WrappedClient(client: Client(creds));
+    _client = Client(creds);
+    notifyListeners();
   }
-}
 
-class WrappedClient {
-  final Client? client;
-  WrappedClient({
-    this.client,
-  });
+  Future<bool> logout(config) async {
+    if (Keys.accesstoken.value == null) return Future.value(false);
 
-  bool get _isExpired => client?.credentials.isExpired ?? true;
-  bool get _canRefresh => client?.credentials.canRefresh ?? false;
-  bool get isLogged => _isExpired == false || _canRefresh;
-}
-
-final timerProvider =
-    StateProvider.family<Timer, KeycloakConfig>((ref, config) {
-  var time = Duration(minutes: 5);
-  debugPrint(
-      "📅 Token refresh setup to ${DateTime.now().add(time).toIso8601String()}");
-  debugPrint("📅 Token refresh setup in ${time.inMinutes} minutes");
-  return Timer.periodic(time, (timer) {
-    ref.read(refreshTokenProvider(config));
-  });
-});
-
-final refreshTokenProvider = FutureProvider.autoDispose
-    .family<bool, KeycloakConfig>((ref, config) async {
-  var client = ref.watch(oAuthClientProvider)?.client;
-  debugPrint("💥💥 Token refreshing");
-  if (client == null) return Future.value(false);
-  try {
-    var res = await client.post(config.tokenEndpoint, headers: {
-      'Content-Type': 'application/x-www-form-urlencoded'
-    }, body: {
-      "client_id": config.clientid,
-      "refresh_token": client.credentials.refreshToken,
-      "grant_type": "refresh_token"
-    });
-    var data = jsonDecode(res.body);
-
-    Keys.accesstoken.value = data["access_token"];
-    Keys.refreshtoken.value = data["refresh_token"];
-    Keys.expiration.setDate =
-        DateTime.now().add(Duration(seconds: data["expires_in"] as int));
-    debugPrint(
-        "✔️🗝️ new Token generated expired at ${Keys.expiration.getDate?.toIso8601String()}");
+    debugPrint("💥💥 LOGIN OUT !!!!");
 
     try {
-      ref.read(oAuthClientProvider.notifier).credidentials = Credentials(
-          Keys.accesstoken.value!,
-          refreshToken: Keys.refreshtoken.value,
-          expiration: Keys.expiration.getDate);
+      await Client(Credentials(Keys.accesstoken.value!))
+          .post(config.logoutEndpoint, headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      }, body: {
+        "client_id": config.clientid,
+        "refresh_token": Keys.refreshtoken.value,
+      });
+
+      Keys.accesstoken.value = null;
+      Keys.refreshtoken.value = null;
+      Keys.expiration.setDate = null;
+
+      try {
+        client = null;
+        notifyListeners();
+      } catch (e) {
+        debugPrint(e.toString());
+      }
+
+      return true;
     } catch (e) {
-      debugPrint(e.toString());
+      return Future.error(e);
     }
-
-    return true;
-  } catch (e) {
-    return Future.error(e);
   }
-});
-
-final logoutProvider =
-    FutureProvider.family<bool, KeycloakConfig>((ref, config) async {
-  var client = ref.watch(oAuthClientProvider)?.client;
-  debugPrint("💥💥 LOGIN OUT !!!!");
-
-  if (client == null) return Future.value(false);
-  try {
-    await client.post(config.logoutEndpoint, headers: {
-      'Content-Type': 'application/x-www-form-urlencoded'
-    }, body: {
-      "client_id": config.clientid,
-      "refresh_token": client.credentials.refreshToken,
-    });
-
-    Keys.accesstoken.value = null;
-    Keys.refreshtoken.value = null;
-    Keys.expiration.setDate = null;
-
-    try {
-      ref.read(oAuthClientProvider.notifier).client = null;
-    } catch (e) {
-      debugPrint(e.toString());
-    }
-
-    return true;
-  } catch (e) {
-    return Future.error(e);
-  }
-});
+}

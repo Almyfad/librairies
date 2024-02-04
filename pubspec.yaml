@@ -16,8 +16,8 @@ dependencies:
   equatable: ^2.0.5
   flutter:
     sdk: flutter
-  flutter_riverpod: ^2.4.0
   http: ^1.1.0
   oauth2: ^2.0.2
+  provider: ^6.1.1
   webview_flutter: ^4.0.1
   
