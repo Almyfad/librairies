@@ -1,6 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:librairies/src/keycloakAuth/keycloakRedirection/keycloak.provider.dart';
-import 'package:oauth2/oauth2.dart';
 import 'package:provider/provider.dart';
 
 import 'keycloak.config.dart';
@@ -11,7 +12,7 @@ class KeycloakAuth extends StatefulWidget {
   final Widget? indicator;
   final Widget child;
   final Widget errorWidget;
-  final Function(Client? client) onTokenUpdated;
+  final Function(KeycloakHttpCLient? client) onTokenUpdated;
   KeycloakAuth({
     required this.keycloakConfig,
     this.indicator,
@@ -25,15 +26,31 @@ class KeycloakAuth extends StatefulWidget {
 }
 
 class _KeycloakAuthState extends State<KeycloakAuth> {
+  Timer? timer;
+  late final AppLifecycleListener _listener;
+  OauthNotifier oauth = OauthNotifier();
+
   @override
   void initState() {
     super.initState();
+    _listener = AppLifecycleListener(
+      onShow: () => oauth.verifyToken(),
+      onResume: () => oauth.verifyToken(),
+      onRestart: () => oauth.verifyToken(),
+    );
+  }
+
+  @override
+  void dispose() {
+    timer?.cancel();
+    _listener.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-        create: (context) => OauthNotifier(),
+        create: (context) => oauth,
         child: Consumer<OauthNotifier>(builder: (context, notifier, child) {
           return AnimatedContainer(
             duration: Durations.medium4,
@@ -41,9 +58,10 @@ class _KeycloakAuthState extends State<KeycloakAuth> {
                 ? widget.child
                 : KeycloackRedirection(
                     onLogged: (value) {
-                      widget.onTokenUpdated(value);
+                      widget.onTokenUpdated(
+                          KeycloakHttpCLient(value!.credentials));
                       notifier.client = value;
-                      notifier.scheduleRefreshToken();
+                      timer = notifier.scheduleRefreshToken();
                     },
                     indicator: widget.indicator,
                     keycloakConfig: widget.keycloakConfig),

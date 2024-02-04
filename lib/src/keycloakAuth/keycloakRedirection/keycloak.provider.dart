@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:librairies/src/keycloakAuth/keycloakRedirection/platform_impl/storage/keycloak.storage.dart';
 import 'package:oauth2/oauth2.dart';
 
@@ -39,9 +40,16 @@ class OauthNotifier extends ChangeNotifier {
     return true;
   }
 
-  scheduleRefreshToken() async{
-    if (_client == null) return;
-    if (_client!.credentials.expiration == null) return;
+  verifyToken() {
+    debugPrint("🗝️ Check Token ");
+    if (isLogged) return;
+    _client = null;
+    notifyListeners();
+  }
+
+  Timer? scheduleRefreshToken() {
+    if (_client == null) return null;
+    if (_client!.credentials.expiration == null) return null;
     var time = Duration(
         seconds: DateTime.now()
                 .difference(_client!.credentials.expiration!)
@@ -51,10 +59,11 @@ class OauthNotifier extends ChangeNotifier {
 
     debugPrint(
         "📅 Token refresh setup to ${DateTime.now().add(time).toIso8601String()}");
-
-    await Future.delayed(time, () => debugPrint("Time elapsed ! Try Refreshing Token"));
-    await refresh();
-    scheduleRefreshToken();
+    return Timer.periodic(time, (timer) async {
+      await refresh();
+      debugPrint(
+          "📅 Token refresh setup to ${DateTime.now().add(time).toIso8601String()}");
+    });
   }
 
   set credidentials(Credentials creds) {
@@ -91,5 +100,16 @@ class OauthNotifier extends ChangeNotifier {
     } catch (e) {
       return Future.error(e);
     }
+  }
+}
+
+class KeycloakHttpCLient extends Client {
+  KeycloakHttpCLient(super.credentials);
+
+
+  @override
+  Future<http.StreamedResponse> send(http.BaseRequest request) async {
+    print("=============>yeaaaaaaaaaah");
+    return super.send(request);
   }
 }
