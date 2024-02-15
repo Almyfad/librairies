@@ -143,8 +143,15 @@ class _KeycloackWebViewState extends State<KeycloackWebView> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      handleMode();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    handleMode();
     return Scaffold(
       body: Center(
         child: Column(
