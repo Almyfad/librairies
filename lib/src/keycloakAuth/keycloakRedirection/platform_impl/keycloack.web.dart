@@ -70,9 +70,12 @@ class _KeycloackWebViewState extends State<KeycloackWebView> {
       codeVerifier: KeyclockLocalStorage.currentCodeVerifier);
 
   handleMode() {
-    debugPrint("🔒 Starting Auth...");
-    var url = oauthgrant
-        .getAuthorizationUrl(Uri.parse(widget.keycloakConfig.redirectUri));
+    debugPrint("🔒 Starting Auth with ${window.location.href}...");
+    if (Keys.redirectUri.value?.isEmpty ?? true) {
+      Keys.redirectUri.value = window.location.href;
+    }
+    var url = oauthgrant.getAuthorizationUrl(
+        Uri.parse(Keys.redirectUri.value ?? widget.keycloakConfig.redirectUri));
 
     if (currentMode == Mode.readLocalStorage) {
       debugPrint("⚙️ Current mode is ${Mode.readLocalStorage}");
@@ -118,10 +121,16 @@ class _KeycloackWebViewState extends State<KeycloackWebView> {
         if (value.credentials.expiration != null) {
           Keys.expiration.setDate = value.credentials.expiration;
         }
-        var uri = Uri.parse(window.location.href);
+        var uri = Uri.parse(
+            Keys.redirectUri.value ?? widget.keycloakConfig.redirectUri);
         var resultUrl = Uri(
-            scheme: uri.scheme, host: uri.host, port: uri.port, path: uri.path);
+            scheme: uri.scheme,
+            host: uri.host,
+            port: uri.port,
+            path: uri.path,
+            fragment: uri.fragment);
         window.history.pushState({}, "document.title", resultUrl.toString());
+        Keys.redirectUri.reset;
         widget.onLogged(value);
         isTokenRedreshenable = true;
 
@@ -132,7 +141,6 @@ class _KeycloackWebViewState extends State<KeycloackWebView> {
       });
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
