@@ -7,6 +7,7 @@ import 'package:oauth2/oauth2.dart';
 
 class OauthNotifier extends ChangeNotifier {
   Client? _client;
+  Timer? timer;
 
   String? get accessToken => _client?.credentials.accessToken;
   String? get refreshToken => _client?.credentials.refreshToken;
@@ -27,6 +28,7 @@ class OauthNotifier extends ChangeNotifier {
   }
 
   Future<bool> refresh() async {
+    if (_client == null) return Future.value(false);
     debugPrint("💥💥 Token refreshor");
     _client = await _client?.refreshCredentials();
     if (_client != null) {
@@ -47,7 +49,8 @@ class OauthNotifier extends ChangeNotifier {
     notifyListeners();
   }
 
-  Timer? scheduleRefreshToken() {
+  scheduleRefreshToken() {
+    timer?.cancel();
     if (_client == null) return null;
     if (_client!.credentials.expiration == null) return null;
     var time = Duration(
@@ -59,7 +62,8 @@ class OauthNotifier extends ChangeNotifier {
 
     debugPrint(
         "📅 Token refresh setup to ${DateTime.now().add(time).toIso8601String()}");
-    return Timer.periodic(time, (timer) async {
+
+    timer = Timer.periodic(time, (timer) async {
       await refresh();
       debugPrint(
           "📅 Token refresh setup to ${DateTime.now().add(time).toIso8601String()}");
@@ -82,7 +86,7 @@ class OauthNotifier extends ChangeNotifier {
         "client_id": config.clientid,
         "refresh_token": Keys.refreshtoken.value,
       });
-
+      timer?.cancel();
       Keys.accesstoken.value = null;
       Keys.refreshtoken.value = null;
       Keys.expiration.setDate = null;
