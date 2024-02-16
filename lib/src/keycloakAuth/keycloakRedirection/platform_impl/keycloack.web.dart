@@ -82,6 +82,7 @@ class _KeycloackWebViewState extends State<KeycloackWebView> {
 
       var cred = Credentials(Keys.accesstoken.value!,
           refreshToken: Keys.refreshtoken.value,
+          tokenEndpoint: widget.keycloakConfig.tokenEndpoint,
           expiration: Keys.expiration.getDate);
 
       debugPrint("🗝️ Token Expiring at ${cred.expiration?.toIso8601String()}");
