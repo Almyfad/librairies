@@ -2,12 +2,17 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:librairies/keycloack_auth.dart';
 import 'package:librairies/src/keycloakAuth/keycloakRedirection/platform_impl/storage/keycloak.storage.dart';
 import 'package:oauth2/oauth2.dart';
 
 class OauthNotifier extends ChangeNotifier {
+  final Function(Client? client)? onRefresh;
+
   Client? _client;
   Timer? timer;
+
+  OauthNotifier({this.onRefresh});
 
   String? get accessToken => _client?.credentials.accessToken;
   String? get refreshToken => _client?.credentials.refreshToken;
@@ -30,12 +35,19 @@ class OauthNotifier extends ChangeNotifier {
   Future<bool> refresh() async {
     if (_client == null) return Future.value(false);
     debugPrint("💥💥 Token refreshor");
-    _client = await _client?.refreshCredentials();
-    if (_client != null) {
-      Keys.expiration.setDate = _client!.credentials.expiration;
-      Keys.accesstoken.value = _client!.credentials.accessToken;
-      Keys.refreshtoken.value = _client!.credentials.refreshToken;
+    // return Future.value(false);
+    try {
+      client = await _client?.refreshCredentials();
+    } catch (e) {
+      debugPrint("❌❌  Token refreshor FAILED ❌❌");
+      return Future.value(false);
     }
+    if (_client == null) return false;
+
+    Keys.expiration.setDate = _client!.credentials.expiration;
+    Keys.accesstoken.value = _client!.credentials.accessToken;
+    Keys.refreshtoken.value = _client!.credentials.refreshToken;
+    onRefresh?.call(_client);
     debugPrint(
         "✔️🗝️ new Token generated expired at ${Keys.expiration.getDate?.toIso8601String()}");
     notifyListeners();
@@ -71,8 +83,7 @@ class OauthNotifier extends ChangeNotifier {
   }
 
   set credidentials(Credentials creds) {
-    _client = Client(creds);
-    notifyListeners();
+    client = Client(creds);
   }
 
   Future<bool> logout(config) async {
@@ -105,15 +116,26 @@ class OauthNotifier extends ChangeNotifier {
   }
 }
 
-class KeycloakHttpCLient extends Client {
+class KeycloakHttpClient extends Client {
   final OauthNotifier oauthNotifier;
-  KeycloakHttpCLient(super.credentials, {required this.oauthNotifier});
+  KeycloakHttpClient(super.credentials,
+      {required this.oauthNotifier, super.identifier});
   @override
   Future<http.StreamedResponse> send(http.BaseRequest request) async {
     try {
-      var send = await super.send(request);
-      return send;
+      debugPrint(
+          "⏱️⏱️$identifier Token Expired ${DateTime.now().difference(Keys.expiration.getDate!).abs().inSeconds} seconds");
+      var res = await super.send(request);
+      if (res.statusCode == 403 || res.statusCode == 401) {
+        throw Exception(
+          "Droits Insufisants",
+        );
+      }
+      return res;
     } on ExpirationException catch (_) {
+      oauthNotifier.reset();
+      rethrow;
+    } on AuthorizationException catch (e) {
       oauthNotifier.reset();
       rethrow;
     }

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:librairies/src/keycloakAuth/keycloakRedirection/keycloak.provider.dart';
+import 'package:oauth2/oauth2.dart';
 import 'package:provider/provider.dart';
 
 import 'keycloak.config.dart';
@@ -12,7 +13,7 @@ class KeycloakAuth extends StatefulWidget {
   final Widget? indicator;
   final Widget child;
   final Widget errorWidget;
-  final Function(KeycloakHttpCLient? client) onTokenUpdated;
+  final Function(Client? client) onTokenUpdated;
   KeycloakAuth({
     required this.keycloakConfig,
     this.indicator,
@@ -28,7 +29,7 @@ class KeycloakAuth extends StatefulWidget {
 class _KeycloakAuthState extends State<KeycloakAuth> {
   Timer? timer;
   late final AppLifecycleListener _listener;
-  OauthNotifier oauth = OauthNotifier();
+  late OauthNotifier oauth = OauthNotifier(onRefresh: widget.onTokenUpdated);
 
   @override
   void initState() {
@@ -58,9 +59,10 @@ class _KeycloakAuthState extends State<KeycloakAuth> {
                 ? widget.child
                 : KeycloackRedirection(
                     onLogged: (value) {
-                      widget.onTokenUpdated(KeycloakHttpCLient(
+                      widget.onTokenUpdated(KeycloakHttpClient(
                           value!.credentials,
-                          oauthNotifier: notifier));
+                          oauthNotifier: notifier,
+                          identifier: value.identifier));
                       notifier.client = value;
                       timer = notifier.scheduleRefreshToken();
                     },
