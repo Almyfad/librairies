@@ -51,11 +51,11 @@ class KeycloackWebView extends StatefulWidget {
   final Function(Client? client) onLogged;
 
   const KeycloackWebView({
-    Key? key,
+    super.key,
     required this.keycloakConfig,
     required this.onLogged,
     this.indicator,
-  }) : super(key: key);
+  });
 
   @override
   State<KeycloackWebView> createState() => _KeycloackWebViewState();

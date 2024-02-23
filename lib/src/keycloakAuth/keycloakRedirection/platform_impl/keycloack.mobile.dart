@@ -26,8 +26,7 @@ class _KeycloackWebView extends StatefulWidget {
   final KeycloakConfig keycloakConfig;
   final Function(Client? client) onLogged;
   const _KeycloackWebView(
-      {Key? key, required this.keycloakConfig, required this.onLogged})
-      : super(key: key);
+      {required this.keycloakConfig, required this.onLogged});
 
   @override
   State<_KeycloackWebView> createState() => _KeycloackWebViewState();

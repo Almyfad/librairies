@@ -3,11 +3,11 @@ import 'package:flutter/material.dart';
 
 class SomethingWenWrong extends StatelessWidget {
   const SomethingWenWrong({
-    Key? key,
+    super.key,
     this.line1,
     this.line2,
     this.iconsize,
-  }) : super(key: key);
+  });
 
   final String? line1;
   final String? line2;

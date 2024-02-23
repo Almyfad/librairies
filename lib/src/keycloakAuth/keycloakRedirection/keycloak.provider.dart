@@ -134,7 +134,7 @@ class KeycloakHttpClient extends Client {
     } on ExpirationException catch (_) {
       oauthNotifier.reset();
       rethrow;
-    } on AuthorizationException catch (e) {
+    } on AuthorizationException catch (_) {
       oauthNotifier.reset();
       rethrow;
     }
