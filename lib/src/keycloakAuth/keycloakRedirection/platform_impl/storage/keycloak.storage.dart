@@ -34,7 +34,7 @@ class KeyclockLocalStorage {
 }
 
 enum Keys {
-  accesstoken("acess_token"),
+  accesstoken("access_token"),
   redirectUri("redirect_uri"),
   refreshtoken("refresh_token"),
   codePKCEVerifier("cvpkce"),
