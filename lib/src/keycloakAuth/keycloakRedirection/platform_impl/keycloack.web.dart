@@ -69,7 +69,7 @@ class _KeycloackWebViewState extends State<KeycloackWebView> {
       widget.keycloakConfig.tokenEndpoint,
       codeVerifier: KeyclockLocalStorage.currentCodeVerifier);
 
-  handleMode() {
+  handleMode() async {
     debugPrint("🔒 Starting Auth with ${window.location.href}...");
     if (Keys.redirectUri.value?.isEmpty ?? true) {
       Keys.redirectUri.value = window.location.href;
@@ -86,12 +86,26 @@ class _KeycloackWebViewState extends State<KeycloackWebView> {
           expiration: Keys.expiration.getDate);
 
       debugPrint("🗝️ Token Expiring at ${cred.expiration?.toIso8601String()}");
-      if (cred.isExpired && cred.canRefresh == false) {
-        debugPrint("❌⏱️❌ Token Expired");
+      if (cred.isExpired) {
+        if (cred.canRefresh) {
+          debugPrint("❌⏱️❌ Token Expired try to refresh...");
+          try {
+            var client = await Client(cred, identifier: oauthgrant.identifier)
+                .refreshCredentials();
+            widget.onLogged(client);
+          } catch (e) {
+            debugPrint("❌❌ Failed to refresh Token. Going Back to login form");
 
-        Keys.accesstoken.reset;
-        Keys.refreshtoken.reset;
-        Keys.expiration.reset;
+            Keys.accesstoken.reset;
+            Keys.refreshtoken.reset;
+            Keys.expiration.reset;
+          }
+        } else {
+          debugPrint("❌⏱️❌ Token Expired an can't be refresh");
+          Keys.accesstoken.reset;
+          Keys.refreshtoken.reset;
+          Keys.expiration.reset;
+        }
       } else {
         debugPrint("👌⏱️👌 Token Still valid");
         Keys.codePKCEVerifier.reset;
