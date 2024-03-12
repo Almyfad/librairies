@@ -85,7 +85,8 @@ class _KeycloackWebViewState extends State<KeycloackWebView> {
           tokenEndpoint: widget.keycloakConfig.tokenEndpoint,
           expiration: Keys.expiration.getDate);
 
-      debugPrint("🗝️ Token Expiring at ${cred.expiration?.toIso8601String()}");
+      debugPrint(
+          "🗝️ read Token Expiring at ${cred.expiration?.toIso8601String()}");
       if (cred.isExpired) {
         if (cred.canRefresh) {
           debugPrint("❌⏱️❌ Token Expired try to refresh...");
@@ -107,10 +108,17 @@ class _KeycloackWebViewState extends State<KeycloackWebView> {
           Keys.expiration.reset;
         }
       } else {
-        debugPrint("👌⏱️👌 Token Still valid");
-        Keys.codePKCEVerifier.reset;
-        widget.onLogged(Client(cred, identifier: oauthgrant.identifier));
-        isTokenRedreshenable = true;
+        if (cred.expiration == null) {
+          debugPrint("❌⏱️❌ Expiration is null");
+          Keys.accesstoken.reset;
+          Keys.refreshtoken.reset;
+          Keys.expiration.reset;
+        } else {
+          debugPrint("👌⏱️👌 Token Still valid");
+          Keys.codePKCEVerifier.reset;
+          widget.onLogged(Client(cred, identifier: oauthgrant.identifier));
+          isTokenRedreshenable = true;
+        }
       }
     }
     if (currentMode == Mode.redirectToKeycloak) {
