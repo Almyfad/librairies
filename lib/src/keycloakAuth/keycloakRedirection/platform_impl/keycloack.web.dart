@@ -3,30 +3,26 @@ import 'dart:async';
 import 'dart:html' show window;
 
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:librairies/keycloack_auth.dart';
-import 'package:librairies/src/keycloakAuth/keycloakRedirection/keycloak.provider.dart';
-import 'package:librairies/src/keycloakAuth/keycloakRedirection/platform_impl/keycloack.base.dart';
 import 'package:librairies/src/keycloakAuth/keycloakRedirection/platform_impl/storage/keycloak.storage.dart';
 import 'package:oauth2/oauth2.dart';
 
-class KeycloackImpl extends BaseLogin {
+class KeycloackImpl extends StatelessWidget {
   final Widget? indicator;
-  KeycloackImpl(KeycloakConfig keycloakConfig, {this.indicator})
-      : super(keycloakConfig);
+  final Function(Client? client) onLogged;
+  final KeycloakConfig keycloakConfig;
+  KeycloackImpl({
+    required this.keycloakConfig,
+    required this.onLogged,
+    this.indicator,
+  });
 
   @override
-  Widget login(BuildContext context) =>
-      KeycloackWeb(keycloakConfig, indicator: indicator).loginWeb();
-}
-
-class KeycloackWeb {
-  final KeycloakConfig keycloakConfig;
-  final Widget? indicator;
-
-  KeycloackWeb(this.keycloakConfig, {this.indicator});
-
-  Widget loginWeb() => KeycloackWebView(keycloakConfig: keycloakConfig);
+  Widget build(BuildContext context) => KeycloackWebView(
+        keycloakConfig: keycloakConfig,
+        onLogged: onLogged,
+        indicator: indicator,
+      );
 }
 
 enum Mode {
@@ -49,22 +45,23 @@ Mode get currentMode {
   return Mode.redirectToKeycloak;
 }
 
-class KeycloackWebView extends ConsumerStatefulWidget {
+class KeycloackWebView extends StatefulWidget {
   final KeycloakConfig keycloakConfig;
   final Widget? indicator;
+  final Function(Client? client) onLogged;
 
   const KeycloackWebView({
-    Key? key,
+    super.key,
     required this.keycloakConfig,
+    required this.onLogged,
     this.indicator,
-  }) : super(key: key);
+  });
 
   @override
-  ConsumerState<ConsumerStatefulWidget> createState() =>
-      __KeycloackWebViewState();
+  State<KeycloackWebView> createState() => _KeycloackWebViewState();
 }
 
-class __KeycloackWebViewState extends ConsumerState<KeycloackWebView> {
+class _KeycloackWebViewState extends State<KeycloackWebView> {
   bool isTokenRedreshenable = false;
   late AuthorizationCodeGrant oauthgrant = AuthorizationCodeGrant(
       widget.keycloakConfig.clientid,
@@ -72,33 +69,56 @@ class __KeycloackWebViewState extends ConsumerState<KeycloackWebView> {
       widget.keycloakConfig.tokenEndpoint,
       codeVerifier: KeyclockLocalStorage.currentCodeVerifier);
 
-  handleMode() {
-    debugPrint("🔒 Starting Auth...");
-    var url = oauthgrant
-        .getAuthorizationUrl(Uri.parse(widget.keycloakConfig.redirectUri));
+  handleMode() async {
+    debugPrint("🔒 Starting Auth with ${window.location.href}...");
+    if (Keys.redirectUri.value?.isEmpty ?? true) {
+      Keys.redirectUri.value = window.location.href;
+    }
+    var url = oauthgrant.getAuthorizationUrl(
+        Uri.parse(Keys.redirectUri.value ?? widget.keycloakConfig.redirectUri));
 
     if (currentMode == Mode.readLocalStorage) {
       debugPrint("⚙️ Current mode is ${Mode.readLocalStorage}");
 
       var cred = Credentials(Keys.accesstoken.value!,
           refreshToken: Keys.refreshtoken.value,
+          tokenEndpoint: widget.keycloakConfig.tokenEndpoint,
           expiration: Keys.expiration.getDate);
 
-      debugPrint("🗝️ Token Expiring at ${cred.expiration?.toIso8601String()}");
-      if (cred.isExpired && cred.canRefresh == false) {
-        debugPrint("❌⏱️❌ Token Expired");
+      debugPrint(
+          "🗝️ read Token Expiring at ${cred.expiration?.toIso8601String()}");
+      if (cred.isExpired) {
+        if (cred.canRefresh) {
+          debugPrint("❌⏱️❌ Token Expired try to refresh...");
+          try {
+            var client = await Client(cred, identifier: oauthgrant.identifier)
+                .refreshCredentials();
+            widget.onLogged(client);
+          } catch (e) {
+            debugPrint("❌❌ Failed to refresh Token. Going Back to login form");
 
-        Keys.accesstoken.reset;
-        Keys.refreshtoken.reset;
-        Keys.expiration.reset;
+            Keys.accesstoken.reset;
+            Keys.refreshtoken.reset;
+            Keys.expiration.reset;
+          }
+        } else {
+          debugPrint("❌⏱️❌ Token Expired an can't be refresh");
+          Keys.accesstoken.reset;
+          Keys.refreshtoken.reset;
+          Keys.expiration.reset;
+        }
       } else {
-        debugPrint("👌⏱️👌 Token Still valid");
-        Keys.codePKCEVerifier.reset;
-        Future.microtask(() {
-          ref.read(oAuthClientProvider.notifier).client =
-              Client(cred, identifier: oauthgrant.identifier);
+        if (cred.expiration == null) {
+          debugPrint("❌⏱️❌ Expiration is null");
+          Keys.accesstoken.reset;
+          Keys.refreshtoken.reset;
+          Keys.expiration.reset;
+        } else {
+          debugPrint("👌⏱️👌 Token Still valid");
+          Keys.codePKCEVerifier.reset;
+          widget.onLogged(Client(cred, identifier: oauthgrant.identifier));
           isTokenRedreshenable = true;
-        });
+        }
       }
     }
     if (currentMode == Mode.redirectToKeycloak) {
@@ -124,11 +144,17 @@ class __KeycloackWebViewState extends ConsumerState<KeycloackWebView> {
         if (value.credentials.expiration != null) {
           Keys.expiration.setDate = value.credentials.expiration;
         }
-        var uri = Uri.parse(window.location.href);
+        var uri = Uri.parse(
+            Keys.redirectUri.value ?? widget.keycloakConfig.redirectUri);
         var resultUrl = Uri(
-            scheme: uri.scheme, host: uri.host, port: uri.port, path: uri.path);
+            scheme: uri.scheme,
+            host: uri.host,
+            port: uri.port,
+            path: uri.path,
+            fragment: uri.fragment);
         window.history.pushState({}, "document.title", resultUrl.toString());
-        ref.read(oAuthClientProvider.notifier).client = value;
+        Keys.redirectUri.reset;
+        widget.onLogged(value);
         isTokenRedreshenable = true;
 
         Keys.codePKCEVerifier.reset;
@@ -139,18 +165,16 @@ class __KeycloackWebViewState extends ConsumerState<KeycloackWebView> {
     }
   }
 
-
-
   @override
-  void dispose() {
-   // ref.read(timerProvider(widget.keycloakConfig)).cancel();
-    super.dispose();
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      handleMode();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    ref.watch(timerProvider(widget.keycloakConfig));
-    handleMode();
     return Scaffold(
       body: Center(
         child: Column(

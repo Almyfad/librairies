@@ -1,42 +1,38 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:librairies/keycloack_auth.dart';
-import 'package:librairies/src/keycloakAuth/keycloakRedirection/keycloak.provider.dart';
+import 'package:librairies/src/keycloakAuth/keycloakRedirection/platform_impl/storage/keycloak.storage.dart';
 import 'package:oauth2/oauth2.dart';
-import 'package:librairies/src/keycloakAuth/keycloakRedirection/platform_impl/keycloack.base.dart';
 import 'package:librairies/somethingwentwrong.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
-class KeycloackImpl extends BaseLogin {
+class KeycloackImpl extends StatelessWidget {
   final Widget? indicator;
-  KeycloackImpl(KeycloakConfig keycloakConfig, {this.indicator})
-      : super(keycloakConfig);
+  final Function(Client? client) onLogged;
+  final KeycloakConfig keycloakConfig;
+  KeycloackImpl({
+    required this.keycloakConfig,
+    required this.onLogged,
+    this.indicator,
+  });
 
   @override
-  Widget login(BuildContext context) =>
-      KeycloackMobile(keycloakConfig).loginMobile();
-}
-
-class KeycloackMobile {
-  final KeycloakConfig keycloakConfig;
-  KeycloackMobile(this.keycloakConfig);
-
-  Widget loginMobile() => _KeycloackWebView(
+  Widget build(BuildContext context) => _KeycloackWebView(
         keycloakConfig: keycloakConfig,
+        onLogged: onLogged,
       );
 }
 
-class _KeycloackWebView extends ConsumerStatefulWidget {
+class _KeycloackWebView extends StatefulWidget {
   final KeycloakConfig keycloakConfig;
-  const _KeycloackWebView({Key? key, required this.keycloakConfig})
-      : super(key: key);
+  final Function(Client? client) onLogged;
+  const _KeycloackWebView(
+      {required this.keycloakConfig, required this.onLogged});
 
   @override
-  ConsumerState<ConsumerStatefulWidget> createState() =>
-      _KeycloackWebViewState();
+  State<_KeycloackWebView> createState() => _KeycloackWebViewState();
 }
 
-class _KeycloackWebViewState extends ConsumerState<_KeycloackWebView> {
+class _KeycloackWebViewState extends State<_KeycloackWebView> {
   late final WebViewController controller;
   late NavigationDelegate _navigationDelegate;
   late AuthorizationCodeGrant oauthgrant = AuthorizationCodeGrant(
@@ -77,7 +73,11 @@ class _KeycloackWebViewState extends ConsumerState<_KeycloackWebView> {
         log("setting client http...");
         var client = await oauthgrant
             .handleAuthorizationResponse(responseUrl.queryParameters);
-        ref.read(oAuthClientProvider.notifier).client = client;
+        widget.onLogged(client);
+
+        Keys.accesstoken.value = client.credentials.accessToken;
+        Keys.refreshtoken.value = client.credentials.refreshToken!;
+        Keys.expiration.setDate = client.credentials.expiration;
 
         log("authentification done");
 
@@ -100,7 +100,6 @@ class _KeycloackWebViewState extends ConsumerState<_KeycloackWebView> {
 
   @override
   Widget build(BuildContext context) {
-    ref.watch(timerProvider(widget.keycloakConfig));
     return Scaffold(body: Builder(builder: (context) {
       if (isNetworkError) {
         return Center(

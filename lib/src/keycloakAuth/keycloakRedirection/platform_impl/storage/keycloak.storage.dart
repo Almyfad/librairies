@@ -4,8 +4,6 @@ import 'package:librairies/src/keycloakAuth/keycloakRedirection/platform_impl/st
     if (dart.library.io) 'package:librairies/src/keycloakAuth/keycloakRedirection/platform_impl/storage/storage.mobile.dart'
     if (dart.library.html) 'package:librairies/src/keycloakAuth/keycloakRedirection/platform_impl/storage/storage.web.dart';
 
-
-
 class KeyclockLocalStorage {
   static KeyclockLocalStorage? _instance;
 
@@ -14,8 +12,8 @@ class KeyclockLocalStorage {
   KeyclockLocalStorage({this.storage});
 
   static StorageImpl get instance {
-     _instance ??= KeyclockLocalStorage(storage: StorageImpl());
-     return _instance!.storage!;
+    _instance ??= KeyclockLocalStorage(storage: StorageImpl());
+    return _instance!.storage!;
   }
 
   static bool get isAcessTokenReady =>
@@ -36,7 +34,8 @@ class KeyclockLocalStorage {
 }
 
 enum Keys {
-  accesstoken("acess_token"),
+  accesstoken("access_token"),
+  redirectUri("redirect_uri"),
   refreshtoken("refresh_token"),
   codePKCEVerifier("cvpkce"),
   expiration("expiration");
@@ -54,6 +53,6 @@ enum Keys {
       : DateTime.fromMillisecondsSinceEpoch(int.parse(value));
 
   set value(String? value) => KeyclockLocalStorage.instance[key] = value ?? "";
-  set setDate(DateTime? value) =>
-      KeyclockLocalStorage.instance[key] = value?.millisecondsSinceEpoch.toString() ?? "NaN";
+  set setDate(DateTime? value) => KeyclockLocalStorage.instance[key] =
+      value?.millisecondsSinceEpoch.toString() ?? "NaN";
 }

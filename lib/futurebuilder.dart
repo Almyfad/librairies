@@ -12,14 +12,13 @@ class EnhancedFutureBuilder<T> extends StatelessWidget {
       errorBuilder;
 
   const EnhancedFutureBuilder(
-      {Key? key,
+      {super.key,
       required this.future,
       this.progressIndicator,
       this.noelement,
       this.error,
       required this.builder,
-      this.errorBuilder})
-      : super(key: key);
+      this.errorBuilder});
 
   @override
   Widget build(BuildContext context) {

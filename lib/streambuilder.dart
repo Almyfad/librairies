@@ -10,13 +10,12 @@ class EnhancedStreamBuilder<T> extends StatelessWidget {
       builder;
 
   const EnhancedStreamBuilder(
-      {Key? key,
+      {super.key,
       required this.stream,
       this.progressIndicator,
       this.noelement,
       this.error,
-      required this.builder})
-      : super(key: key);
+      required this.builder});
 
   @override
   Widget build(BuildContext context) {
